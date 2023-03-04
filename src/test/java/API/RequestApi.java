@@ -5,9 +5,7 @@ import org.junit.Test;
 
 
 import static MyData.EndPointsApi.urlFile;
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.everyItem;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class RequestApi {
@@ -30,7 +28,7 @@ public class RequestApi {
                 .body("name", (equalTo(nameFolder)));
 
         //Удаляем папку
-        Methods.deleteFile(nameFolder)
+        Methods.deleteFile(nameFolder, true)
                 .statusCode(204);
 
         //Проверяем что папка удалена
@@ -51,11 +49,11 @@ public class RequestApi {
                 .statusCode(202);
 
         //Удаляем файл
-        Methods.deleteFile(dirToFile)
+        Methods.deleteFile(dirToFile, true)
                 .statusCode(204);
 
         //Удаляем папку
-        Methods.deleteFile(nameFolder)
+        Methods.deleteFile(nameFolder, false)
                 .statusCode(204);
 
     }
@@ -63,80 +61,136 @@ public class RequestApi {
    @Test
     public void thirtyTest() throws InterruptedException {
 
-        Methods.createFolder(nameFolder);
+        //Создаем папку
+        Methods.createFolder(nameFolder)
+                .statusCode(201);
 
-        Methods.createFile(dirToFile, urlFile);
+        //Создаем файл
+        Methods.createFile(dirToFile, urlFile)
+                .statusCode(202);
 
-        Methods.deleteFile(dirToFile);
+        //Удаляем файл
+        Methods.deleteFile(dirToFile, false)
+                .statusCode(204);
 
-        Methods.restoreTrash(Methods.checkDeleteFile(nameFile));
+        //Восстанавлием файл
+        Methods.restoreTrash(Methods.checkDeleteFile(nameFile))
+                .statusCode(201);
+
+       //Проверяем что файл существует
+       Methods.checkFile(dirToFile)
+               .statusCode(200)
+               .body("name", (equalTo(nameFile)));
+
+       //Удаляем папку
+       Methods.deleteFile(nameFolder, false)
+               .statusCode(202);
     }
 
     @Test
     public void fourthTest() throws InterruptedException {
 
-        Methods.createFolder(nameFolder);
+        //Создаем папку
+        Methods.createFolder(nameFolder)
+                .statusCode(201);
 
-        Methods.createFile(dirToFile, urlFile);
+        //Создаем файл
+        Methods.createFile(dirToFile, urlFile)
+                .statusCode(202);
 
-        Methods.createFile(dirToFile2, urlFile);
+        //Создаем второй файл
+        Methods.createFile(dirToFile2, urlFile)
+                .statusCode(202);
 
+        //Получаем размер корзины до удаления файлов
         Integer beforeSizeDustbin = Methods.checkDeleteFile();
 
-        Methods.deleteFile(dirToFile);
+        //Удаляем первый файл
+        Methods.deleteFile(dirToFile, false)
+                .statusCode(204);
 
-        Methods.deleteFile(dirToFile2);
+        //Удаляем второй файл
+        Methods.deleteFile(dirToFile2, false)
+                .statusCode(204);
 
+        //Получаем размер двух файлов
         Integer s4 = Methods.checkDelete("Test.txt", "file.txt");
 
+        //Получаеем размер корзины
         Integer sizeDustbin = Methods.checkDeleteFile();
 
-        assert(sizeDustbin == s4 + beforeSizeDustbin);
+        //Проверяем что (размер корзины = размер двух файлов + размер корзины без двух файлов)
+        assert(sizeDustbin == s4 + beforeSizeDustbin); //в корзине могут быть два файла с одинаковым названием
 
-        Methods.restoreTrash(Methods.checkDeleteFile(nameFile));
+        //Восстанавлиаем первый файл
+        Methods.restoreTrash(Methods.checkDeleteFile(nameFile))
+                .statusCode(201);
 
-        Methods.restoreTrash(Methods.checkDeleteFile("file.txt"));
+        //Восстанавливаем второй файл
+        Methods.restoreTrash(Methods.checkDeleteFile("file.txt"))
+                .statusCode(201);
 
-        Methods.deleteFile(nameFolder);
+        //Удаляем папку с файлами
+        Methods.deleteFile(nameFolder, true)
+                .statusCode(202);
     }
 
     @Test
     public void fiftiethTest() throws InterruptedException {
 
-        Methods.createFolder("test");
+        //Создаем папку test
+        Methods.createFolder("test")
+                .statusCode(201);
 
-        Methods.createFolder("test/foo");
+        //В папке test создаем папку foo
+        Methods.createFolder("test/foo")
+                .statusCode(201);
 
-        Methods.createFile("test/foo/autotest.txt", urlFile);
+        //В папке foo создаем файл autotest.txt
+        Methods.createFile("test/foo/autotest.txt", urlFile)
+                .statusCode(202);
 
-        Methods.checkFile2("test")
+        //Сравниваем методанные папки test
+        Methods.checkFile("test")
                 .statusCode(200)
                 .body("_embedded.items.name", everyItem((equalTo("foo"))))
                 .body("_embedded.items.path", everyItem((equalTo("disk:/test/foo"))));
 
-        Methods.deleteFile("test");
+        //Удаляем папку test, помещая ее в корзину
+        Methods.deleteFile("test", false)
+                .statusCode(202);
 
+        //Проверяем что в корзине есть папка test
         Methods.checkDelete("test")
-                .statusCode(200)
-                .body("_embedded.items.name", everyItem((equalTo("test"))));
+                .statusCode(200);
     }
 
     @Test
     public void sixtiethTest() throws InterruptedException {
-        Methods.createFolder("test");
 
-        Methods.createFolder("test/foo");
+        //Создаем папку test
+        Methods.createFolder("test")
+                .statusCode(201);
 
-        Methods.createFile("test/foo/autotest.txt", urlFile);
+        //Создаем папку foo в папке test
+        Methods.createFolder("test/foo")
+                .statusCode(201);
 
-        Methods.deleteFile("test");
+        //Создаем файл autotest.txt в папке foo
+        Methods.createFile("test/foo/autotest.txt", urlFile)
+                .statusCode(202);
+
+        //Удаляем папку test
+        Methods.deleteFile("test", false)
+                .statusCode(202);
 
         //Очищаем полность корзину
         Methods.deleteAll()
-                .assertThat().statusCode(204);
+                .assertThat().statusCode(202);
 
+        //Проверяем что наша корзина пуста
         Methods.checkDelete("test")
                 .statusCode(200)
-                .body("_embedded.items", everyItem((equalTo(0))));
+                .body("total", ((equalTo(null))));
     }
 }

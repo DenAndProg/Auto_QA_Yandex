@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.everyItem;
-import static org.hamcrest.core.IsEqual.equalTo;
 
 
 public class Methods {
@@ -43,41 +41,33 @@ public class Methods {
                 .then().log().all();
     }
 
-    public static ValidatableResponse checkFile2(String name){
-        ValidatableResponse response = Specs.requestSpecification()
-                .param("path", name)
-                .when()
-                .request("GET", EndPointsApi.fileAndFolder)
-                .then().log().all();
+    public static ValidatableResponse deleteFile(String name, boolean clear) throws InterruptedException {  //если clear = true, то удаление без переноса в корзину
+        Thread.sleep(2000);
+        ValidatableResponse response = Specs.requestSpecification().when()
+                    .request("DELETE", EndPointsApi.fileAndFolder + "?path=" + name + "&permanently=" + clear)
+                    .then().log().status();
         return response;
     }
 
-    public static ValidatableResponse deleteFile(String name) throws InterruptedException {
-        int time = 0;
-        while(time < 10) {
-            ValidatableResponse response = Specs.requestSpecification()
-                    .param("path", name)
-                    .when()
-                    .request("DELETE", EndPointsApi.fileAndFolder)
-                    .then()
-                    .assertThat();
-            if(response.extract().statusCode() == 204) { response.log().all(); return response; }
-            else{
-                Thread.sleep(2000);
-                time++;
-            }
-        }
-        return null;
-    }
-
     public static String checkDeleteFile(String name){
-
-        List list = infoDelete();
+        List list = infoDeleteFile();
         return Function.getPath(list, name);
+    }
+
+    public static Integer checkDeleteFile(){
+
+        List list = infoDeleteFile();
+        return Function.getSizeAllTrash(list);
 
     }
 
-    public static List infoDelete(){
+    public static Integer checkDelete(String name, String name1){
+        List list = infoDeleteFile();
+        return Function.getSizeFiles(list, name, name1);
+
+    }
+
+    public static List infoDeleteFile(){
         return Specs.requestSpecification()
                 .param("path", "/")
                 .when()
@@ -86,21 +76,9 @@ public class Methods {
                 .extract().response().jsonPath()
                 .get("_embedded.items");
     }
-    public static Integer checkDeleteFile(){
 
-        List list = infoDelete();
-        return Function.getSize(list);
-
-    }
-
-    public static Integer checkDelete(String name, String name1){
-
-        List list = infoDelete();
-        return Function.getSize(list, name, name1);
-    }
-
-    public static void restoreTrash(String filePath){
-        Specs.requestSpecification()
+    public static ValidatableResponse restoreTrash(String filePath){
+        return Specs.requestSpecification()
                 .param("path", filePath)
                 .when()
                 .request("PUT", EndPointsApi.trashFile)
@@ -115,6 +93,9 @@ public class Methods {
                         .request("GET", EndPointsApi.trashResources)
                         .then();
 
+        List list = response.extract().jsonPath().get("_embedded.items");
+        boolean check = Function.checkExistName(list, name);
+        assert (check);
         return response;
     }
 
@@ -124,7 +105,6 @@ public class Methods {
                         .when()
                         .request("DELETE", EndPointsApi.trash)
                         .then();
-
         return response;
     }
 }
