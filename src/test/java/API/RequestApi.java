@@ -20,26 +20,44 @@ public class RequestApi {
     @Test
     public void firstTest() throws InterruptedException {
 
-        //создаем папку
+        //Создаем папку
         Methods.createFolder(nameFolder)
-                .assertThat().statusCode(201);
+                .statusCode(201);
 
-        Methods.checkFile(nameFolder);
+        //Проверяем что папка существует
+        Methods.checkFile(nameFolder)
+                .statusCode(200)
+                .body("name", (equalTo(nameFolder)));
 
-        Methods.deleteFile(nameFolder);
+        //Удаляем папку
+        Methods.deleteFile(nameFolder)
+                .statusCode(204);
 
-        Methods.checkFile(nameFolder);
+        //Проверяем что папка удалена
+        Methods.checkFile(nameFolder)
+                .statusCode(404);
+
     }
 
     @Test
     public void secondTest() throws InterruptedException {
-        Methods.createFolder(nameFolder);
 
-        Methods.createFile(dirToFile, urlFile);
+        //Создаем папку
+        Methods.createFolder(nameFolder)
+                .statusCode(201);
 
-        Methods.deleteFile(dirToFile);
+        //Создаем файл
+        Methods.createFile(dirToFile, urlFile)
+                .statusCode(202);
 
-        Methods.deleteFile(nameFolder);
+        //Удаляем файл
+        Methods.deleteFile(dirToFile)
+                .statusCode(204);
+
+        //Удаляем папку
+        Methods.deleteFile(nameFolder)
+                .statusCode(204);
+
     }
 
    @Test
@@ -113,7 +131,9 @@ public class RequestApi {
 
         Methods.deleteFile("test");
 
-        Methods.deleteAll();
+        //Очищаем полность корзину
+        Methods.deleteAll()
+                .assertThat().statusCode(204);
 
         Methods.checkDelete("test")
                 .statusCode(200)

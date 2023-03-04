@@ -3,7 +3,10 @@ package Specs;
 import MyData.EndPointsApi;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
+
 import static MyData.Auth.token;
+import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
 
 public class Specs {
@@ -16,5 +19,9 @@ public class Specs {
                 .when();
         return requestSpec;
     }
+
+    /*public static ResponseSpecification responseSpecification(){
+        return expect().;
+    }*/
 
 }

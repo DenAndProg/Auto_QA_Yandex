@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.core.IsEqual.equalTo;
+
 
 public class Methods {
 
@@ -19,20 +22,21 @@ public class Methods {
         .then().log().all();
     }
 
-    public static void createFile(String name, String url){
+    public static ValidatableResponse createFile(String name, String url){
         Map<String, String> pathParams;
         pathParams = new HashMap<>();
         pathParams.put("path", "/" + name);
         pathParams.put("url", url);
-        Specs.requestSpecification()
+       ValidatableResponse response = Specs.requestSpecification()
                 .queryParams(pathParams)
                 .when()
                 .request("POST", EndPointsApi.fileUpload)
                 .then().log().all();
+        return response;
     }
 
-    public static void checkFile(String name){
-        Specs.requestSpecification()
+    public static ValidatableResponse checkFile(String name){
+       return Specs.requestSpecification()
                 .param("path", name)
                 .when()
                 .request("GET", EndPointsApi.fileAndFolder)
@@ -48,7 +52,7 @@ public class Methods {
         return response;
     }
 
-    public static void deleteFile(String name) throws InterruptedException {
+    public static ValidatableResponse deleteFile(String name) throws InterruptedException {
         int time = 0;
         while(time < 10) {
             ValidatableResponse response = Specs.requestSpecification()
@@ -57,12 +61,13 @@ public class Methods {
                     .request("DELETE", EndPointsApi.fileAndFolder)
                     .then()
                     .assertThat();
-            if(response.extract().statusCode() == 204) { response.log().all(); return; }
+            if(response.extract().statusCode() == 204) { response.log().all(); return response; }
             else{
                 Thread.sleep(2000);
                 time++;
             }
         }
+        return null;
     }
 
     public static String checkDeleteFile(String name){
