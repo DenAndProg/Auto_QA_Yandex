@@ -2,20 +2,23 @@ package API;
 
 import Methods.*;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 
 
 import static MyData.EndPointsApi.urlFile;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-public class RequestApi {
+public class TestApiDisk {
 
     public static String nameFolder = "MyFile";
     public static String nameFile = "Test.txt";
     public static String dirToFile = nameFolder + "/" + nameFile;
     public static String dirToFile2 = nameFolder + "/" + "file.txt";
 
+
     @Test
+    @DisplayName("Тест 1")
     public void firstTest() throws InterruptedException {
 
         //Создаем папку

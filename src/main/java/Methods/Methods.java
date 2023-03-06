@@ -2,6 +2,7 @@ package Methods;
 
 import Function.Function;
 import MyData.EndPointsApi;
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import Specs.*;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 public class Methods {
 
+    @Step("Создать папку")
     public static ValidatableResponse createFolder(String name){
         return Specs.requestSpecification()
         .param("path", name)
